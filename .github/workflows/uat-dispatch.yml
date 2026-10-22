@@ -1,4 +1,5 @@
 
+
 name: UAT Practice Dispatch
 
 on:
@@ -9,5 +10,8 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Show UAT message
-        run: echo "Hello! My UAT workflow is running."
+      - name: Download repository code
+        uses: actions/checkout@v4
+
+      - name: Show frontend file
+        run: cat index.html
