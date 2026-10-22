@@ -1,0 +1,13 @@
+
+name: UAT Practice Dispatch
+
+on:
+  workflow_dispatch:
+
+jobs:
+  show-message:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Show UAT message
+        run: echo "Hello! My UAT workflow is running."
