@@ -45,11 +45,20 @@ on:
           - roll-out
           - roll-back
 
+permissions:
+  contents: write
+
 jobs:
   practice:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Checkout practice repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.branch }}
+          fetch-depth: 0
+
       - name: Show selected inputs
         env:
           TARGET_REPO: ${{ inputs.target_repo }}
@@ -86,3 +95,70 @@ jobs:
       - name: Display mapping
         run: |
           echo "Mapped repository: $repo_path"
+
+      - name: Create automatic version tag
+        env:
+          VERSION_TYPE: ${{ inputs.version_type }}
+          RELEASE_TYPE: ${{ inputs.release_type }}
+        run: |
+          set -euo pipefail
+
+          if [ "$RELEASE_TYPE" != "roll-out" ]; then
+            echo "Roll-back selected. No new tag will be created."
+            echo "Actual rollback is not configured in this practice workflow."
+            exit 0
+          fi
+
+          git fetch --tags origin
+
+          latest_tag=$(git tag --list 'v[0-9]*' \
+            --sort=-version:refname | head -n 1)
+
+          if [ -z "$latest_tag" ]; then
+            major=0
+            minor=0
+            patch=0
+          else
+            if [[ ! "$latest_tag" =~ ^v([0-9]+)\.([0-9]+)\.([0-9]+)$ ]]; then
+              echo "Latest tag is not in vMAJOR.MINOR.PATCH format."
+              exit 1
+            fi
+
+            major=${BASH_REMATCH[1]}
+            minor=${BASH_REMATCH[2]}
+            patch=${BASH_REMATCH[3]}
+          fi
+
+          case "$VERSION_TYPE" in
+            patch)
+              patch=$((patch + 1))
+              ;;
+            minor)
+              minor=$((minor + 1))
+              patch=0
+              ;;
+            major)
+              major=$((major + 1))
+              minor=0
+              patch=0
+              ;;
+            *)
+              echo "Invalid version type"
+              exit 1
+              ;;
+          esac
+
+          new_tag="v${major}.${minor}.${patch}"
+
+          if git rev-parse -q --verify "refs/tags/$new_tag" >/dev/null; then
+            echo "Tag $new_tag already exists."
+            exit 1
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git tag -a "$new_tag" -m "Practice release $new_tag"
+          git push origin "$new_tag"
+
+          echo "Successfully created tag: $new_tag"
