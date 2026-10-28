@@ -1,4 +1,5 @@
 
+
 name: UAT Tag Dispatch Practice
 
 on:
@@ -11,6 +12,7 @@ on:
         options:
           - frontend
           - user
+
       environment:
         description: Choose environment
         required: true
@@ -18,12 +20,14 @@ on:
         options:
           - tru-uat
           - uat
+
       branch:
         description: Choose branch
         required: true
         type: choice
         options:
           - main
+
       version_type:
         description: Choose version type
         required: true
@@ -32,6 +36,7 @@ on:
           - patch
           - minor
           - major
+
       release_type:
         description: Choose operation
         required: true
@@ -43,6 +48,7 @@ on:
 jobs:
   practice:
     runs-on: ubuntu-latest
+
     steps:
       - name: Show selected inputs
         env:
@@ -63,12 +69,20 @@ jobs:
           TARGET_REPO: ${{ inputs.target_repo }}
         run: |
           case "$TARGET_REPO" in
-            frontend) repo_path="practice-frontend" ;;
-            user) repo_path="practice-user" ;;
-            *) echo "Invalid repository"; exit 1 ;;
+            frontend)
+              repo_path="practice-frontend"
+              ;;
+            user)
+              repo_path="practice-user"
+              ;;
+            *)
+              echo "Invalid repository"
+              exit 1
+              ;;
           esac
 
           echo "repo_path=$repo_path" >> "$GITHUB_ENV"
 
       - name: Display mapping
-        run: echo "Mapped repository: $repo_path"
+        run: |
+          echo "Mapped repository: $repo_path"
