@@ -1,17 +1,74 @@
 
-
-name: UAT Practice Dispatch
+name: UAT Tag Dispatch Practice
 
 on:
   workflow_dispatch:
+    inputs:
+      target_repo:
+        description: Choose a practice repository
+        required: true
+        type: choice
+        options:
+          - frontend
+          - user
+      environment:
+        description: Choose environment
+        required: true
+        type: choice
+        options:
+          - tru-uat
+          - uat
+      branch:
+        description: Choose branch
+        required: true
+        type: choice
+        options:
+          - main
+      version_type:
+        description: Choose version type
+        required: true
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+      release_type:
+        description: Choose operation
+        required: true
+        type: choice
+        options:
+          - roll-out
+          - roll-back
 
 jobs:
-  show-message:
+  practice:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Download repository code
-        uses: actions/checkout@v4
+      - name: Show selected inputs
+        env:
+          TARGET_REPO: ${{ inputs.target_repo }}
+          ENVIRONMENT: ${{ inputs.environment }}
+          BRANCH: ${{ inputs.branch }}
+          VERSION_TYPE: ${{ inputs.version_type }}
+          RELEASE_TYPE: ${{ inputs.release_type }}
+        run: |
+          echo "Repository: $TARGET_REPO"
+          echo "Environment: $ENVIRONMENT"
+          echo "Branch: $BRANCH"
+          echo "Version type: $VERSION_TYPE"
+          echo "Release type: $RELEASE_TYPE"
 
-      - name: Show frontend file
-        run: cat index.html
+      - name: Map practice repository
+        env:
+          TARGET_REPO: ${{ inputs.target_repo }}
+        run: |
+          case "$TARGET_REPO" in
+            frontend) repo_path="practice-frontend" ;;
+            user) repo_path="practice-user" ;;
+            *) echo "Invalid repository"; exit 1 ;;
+          esac
+
+          echo "repo_path=$repo_path" >> "$GITHUB_ENV"
+
+      - name: Display mapping
+        run: echo "Mapped repository: $repo_path"
